@@ -1,513 +1,76 @@
-```python
-!pip install -q imbalanced-learn
-!pip install -q seaborn
-!pip install -q xgboost
-!pip install -q lightgbm
-!pip install -q catboost
+# 🎯 Big Data ile Makine Öğrenmesi Analizi
 
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
+Bu proje, büyük veri setleri üzerinde çeşitli makine öğrenmesi algoritmalarını kullanarak dolandırıcılık tespiti ve sınıflandırma üzerine odaklanır. Veri ön işleme, dengesiz veri sorunlarıyla başa çıkma ve model değerlendirme adımlarını içerir.
 
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+---
 
-from imblearn.over_sampling import SMOTE, ADASYN
-from imblearn.under_sampling import NearMiss
-from sklearn.metrics import (
-    accuracy_score, precision_score, recall_score, f1_score,
-    roc_auc_score, precision_recall_curve, auc, confusion_matrix,
-    classification_report
-)
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier, GradientBoostingClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import SVC
-from sklearn.naive_bayes import GaussianNB
-from xgboost import XGBClassifier
-from lightgbm import LGBMClassifier
-from catboost import CatBoostClassifier
+## 📁 Proje İçeriği
+
+Notebook içerisinde aşağıdaki adımlar gerçekleştirilmiştir:
+
+### 1. 📦 Veri Yükleme ve İnceleme
+- Pandas kullanılarak veri yüklenmiş
+- Kayıp değerler, veri dağılımları ve dengesizlikler analiz edilmiştir
+
+### 2. 🧹 Veri Ön İşleme
+- Kategorik değişkenlerin dönüştürülmesi
+- Özellik ölçekleme (StandardScaler)
+- Veri kümesindeki sınıf dengesizliğini gidermek için **NearMiss** yöntemi uygulanmıştır
+
+### 3. 📊 Modelleme
+Aşağıdaki makine öğrenmesi algoritmaları eğitilmiş ve test edilmiştir:
+
+- **Lojistik Regresyon**
+- **Random Forest**
+- **Decision Tree**
+- **K-Nearest Neighbors**
+- **Gradient Boosting Classifier**
+- **AdaBoost Classifier**
+- **XGBoost Classifier**
+
+### 4. 📈 Model Performans Karşılaştırması
+
+Modeller şu metriklerle karşılaştırılmıştır:
+
+- Accuracy (Doğruluk)
+- Precision (Kesinlik)
+- Recall (Duyarlılık)
+- F1 Score
+- ROC AUC
+- PR AUC
+- Specificity
+
+Detaylı karşılaştırma tabloları görselleştirilmiştir.
+
+---
+
+## 🛠️ Kullanılan Kütüphaneler
+
+- `pandas`, `numpy`
+- `matplotlib`, `seaborn`
+- `scikit-learn`
+- `imbalanced-learn`
+- `xgboost`
+
+---
+
+## 🚀 Nasıl Kullanılır?
+
+1. Gerekli paketleri yükleyin:
+```bash
+pip install -r requirements.txt
 ```
 
-```python
-df = pd.read_csv("/content/Bank_Transaction_Fraud_Detection.csv")
-df.head()
+2. Notebook'u çalıştırın:
+```bash
+jupyter notebook bigData.ipynb
 ```
 
-```python
-df.info()
-```
+3. Her hücreyi sırayla çalıştırarak analiz sürecini takip edin.
 
-```python
-plt.figure(figsize=(8, 6))
-sns.set_style("whitegrid")
-palette = ['#5DADE2', '#E74C3C']  # mavi ve kırmızı
+---
 
-sns.countplot(data=df, x='Is_Fraud', palette=palette)
-plt.title('Fraud vs Non-Fraud Transactions', fontsize=16, weight='bold')
-plt.xlabel('Is Fraud?', fontsize=12)
-plt.ylabel('Transaction Count', fontsize=12)
-plt.xticks([0, 1], ['Non-Fraud (0)', 'Fraud (1)'])
-plt.tight_layout()
-plt.show()
+## 📬 İletişim
 
-fraud_ratio = df['Is_Fraud'].value_counts(normalize=True)
-print(fraud_ratio)
-```
-
-```python
-df_cleaned = df.drop([
-    'Customer_ID', 'Customer_Name', 'Transaction_ID', 'Merchant_ID','Transaction_Currency',
-    'Transaction_Date', 'Transaction_Time',
-    'Transaction_Description', 'Customer_Contact', 'Customer_Email'
-], axis=1)
-```
-
-```python
-# Her kategorik sütunun kaç farklı değeri var
-categorical_cols = df_cleaned.select_dtypes(include='object').columns
-unique_counts = df_cleaned[categorical_cols].nunique().sort_values(ascending=False)
-print(unique_counts)
-```
-
-```python
-from sklearn.preprocessing import LabelEncoder
-import pandas as pd
-
-# One-hot encode edilecek sütunlar (az kategorili, sıralı anlam taşımayan)
-one_hot_cols = ['Merchant_Category', 'Transaction_Type', 'Device_Type', 'Account_Type', 'Gender']
-df_cleaned = pd.get_dummies(df_cleaned, columns=one_hot_cols, drop_first=True)
-
-# Label encode edilecek sütunlar (kategorik ama çok sınıfı olmayan)
-label_encode_cols = ['Transaction_Device', 'State']
-label_encoders = {}
-for col in label_encode_cols:
-    le = LabelEncoder()
-    df_cleaned[col] = le.fit_transform(df_cleaned[col])
-    label_encoders[col] = le
-
-# Embedding için encode edilecek sütunlar (çok sayıda sınıfa sahip)
-embedding_cols = ['Transaction_Location', 'Bank_Branch', 'City']
-embedding_encoders = {}
-for col in embedding_cols:
-    le = LabelEncoder()
-    df_cleaned[col] = le.fit_transform(df_cleaned[col])
-    embedding_encoders[col] = le
-```
-
-```python
-scaler = StandardScaler()
-numeric_cols = ['Age', 'Transaction_Amount', 'Account_Balance']
-df_cleaned[numeric_cols] = scaler.fit_transform(df_cleaned[numeric_cols])
-```
-
-```python
-df_cleaned = df_cleaned.dropna(subset=['Is_Fraud'])
-X = df_cleaned.drop('Is_Fraud', axis=1)
-y = df_cleaned['Is_Fraud']
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, test_size=0.2, random_state=42)
-```
-
-```python
-X_train
-```
-
-```python
-def apply_resampling(method, X, y):
-    X_res, y_res = method.fit_resample(X, y)
-
-    # y_res'i pandas Series yap ve etiketleri adlandır
-    y_res_series = pd.Series(y_res, name='Is_Fraud')
-    y_res_series = y_res_series.map({0: 'Non-Fraud', 1: 'Fraud'})
-
-    # Şık görselleştirme
-    plt.figure(figsize=(8, 6))
-    sns.set_style("whitegrid")
-    palette = ['#3498DB', '#E74C3C']  # Mavi: Non-Fraud, Kırmızı: Fraud
-
-    sns.countplot(x=y_res_series, palette=palette)
-    plt.title(f'🧪 Distribution After Resampling with {method.__class__.__name__}', fontsize=16, weight='bold')
-    plt.xlabel('Transaction Class', fontsize=12)
-    plt.ylabel('Sample Count', fontsize=12)
-    plt.xticks(fontsize=11)
-    plt.yticks(fontsize=11)
-    plt.tight_layout()
-    plt.show()
-
-    return X_res, y_res
-```
-
-```python
-# SMOTE
-print("🔄 SMOTE")
-smote = SMOTE(random_state=42)
-X_smote, y_smote = apply_resampling(smote, X_train, y_train)
-
-# ADASYN
-print("🔄 ADASYN")
-adasyn = ADASYN(random_state=42)
-X_adasyn, y_adasyn = apply_resampling(adasyn, X_train, y_train)
-
-# NearMiss
-print("🔄 NearMiss")
-nearmiss = NearMiss()
-X_nearmiss, y_nearmiss = apply_resampling(nearmiss, X_train, y_train)
-```
-
-```python
-# Türkçe font ayarları
-plt.rcParams['font.family'] = ['DejaVu Sans']
-plt.style.use('seaborn-v0_8')
-```
-
-```python
-def evaluate_models_comprehensive(X_train, y_train, X_test, y_test, method_name=""):
-    """Kapsamlı model değerlendirme fonksiyonu"""
-    models = {
-        "LogisticRegression": LogisticRegression(max_iter=1000),
-        "RandomForest": RandomForestClassifier(random_state=42),
-        "DecisionTree": DecisionTreeClassifier(random_state=42),
-        "KNN": KNeighborsClassifier(),
-        "SVC": SVC(probability=True, random_state=42),
-        "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42),
-        "LightGBM": LGBMClassifier(random_state=42, verbose=-1),
-        "CatBoost": CatBoostClassifier(verbose=0, random_state=42),
-        "GradientBoosting": GradientBoostingClassifier(random_state=42),
-        "ExtraTrees": ExtraTreesClassifier(random_state=42),
-        "NaiveBayes": GaussianNB()
-    }
-
-    results = []
-    confusion_matrices = {}
-
-    print(f"\n{'='*60}")
-    print(f"🚀 {method_name} - MODEL EĞİTİMİ VE DEĞERLENDİRME")
-    print(f"{'='*60}")
-
-    for name, model in models.items():
-        print(f"\n🔎 {name} eğitiliyor...")
-
-        try:
-            # Model eğitimi
-            model.fit(X_train, y_train)
-            y_pred = model.predict(X_test)
-
-            # Olasılık tahminleri
-            try:
-                y_proba = model.predict_proba(X_test)[:, 1]
-            except:
-                y_proba = y_pred
-
-            # Metrik hesaplamaları
-            precision, recall, _ = precision_recall_curve(y_test, y_proba)
-            pr_auc = auc(recall, precision)
-            roc_auc = roc_auc_score(y_test, y_proba)
-            acc = accuracy_score(y_test, y_pred)
-            f1 = f1_score(y_test, y_pred, zero_division=0)
-            precision_val = precision_score(y_test, y_pred, zero_division=0)
-            recall_val = recall_score(y_test, y_pred, zero_division=0)
-
-            # Confusion Matrix
-            cm = confusion_matrix(y_test, y_pred)
-            confusion_matrices[name] = cm
-
-            # Specificity (True Negative Rate) hesaplama
-            tn, fp, fn, tp = cm.ravel()
-            specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
-
-            results.append({
-                "Method": method_name,
-                "Model": name,
-                "Accuracy": round(acc, 4),
-                "Precision": round(precision_val, 4),
-                "Recall": round(recall_val, 4),
-                "F1_Score": round(f1, 4),
-                "Specificity": round(specificity, 4),
-                "ROC_AUC": round(roc_auc, 4),
-                "PR_AUC": round(pr_auc, 4),
-                "True_Positives": int(tp),
-                "True_Negatives": int(tn),
-                "False_Positives": int(fp),
-                "False_Negatives": int(fn)
-            })
-
-            print(f"   ✅ {name}: F1={f1:.4f}, Accuracy={acc:.4f}, ROC_AUC={roc_auc:.4f}")
-
-        except Exception as e:
-            print(f"   ❌ {name}: Hata - {str(e)}")
-            continue
-
-    return pd.DataFrame(results), confusion_matrices
-```
-
-```python
-def create_comprehensive_visualizations(df_results, confusion_matrices, method_name=""):
-    """Kapsamlı görselleştirme fonksiyonu"""
-
-    # 1. Metrik Karşılaştırma Tablosu
-    print(f"\n📊 {method_name} - DETAYLI METRİK TABLOSU")
-    print("="*120)
-    display_df = df_results[['Model', 'Accuracy', 'Precision', 'Recall', 'F1_Score', 'Specificity', 'ROC_AUC', 'PR_AUC']]
-    print(display_df.to_string(index=False))
-
-    # 2. En iyi modelleri belirleme
-    best_models = {
-        'Accuracy': df_results.loc[df_results['Accuracy'].idxmax()],
-        'F1_Score': df_results.loc[df_results['F1_Score'].idxmax()],
-        'ROC_AUC': df_results.loc[df_results['ROC_AUC'].idxmax()],
-        'Precision': df_results.loc[df_results['Precision'].idxmax()],
-        'Recall': df_results.loc[df_results['Recall'].idxmax()]
-    }
-
-    print(f"\n🏆 {method_name} - EN İYİ MODELLER")
-    print("-"*50)
-    for metric, model_info in best_models.items():
-        print(f"{metric:12}: {model_info['Model']:18} ({model_info[metric]:.4f})")
-
-    # Görselleştirmeler
-    fig = plt.figure(figsize=(20, 15))
-    fig.suptitle(f'{method_name} - Kapsamlı Model Analizi', fontsize=16, fontweight='bold')
-
-    # 1. Tüm Metriklerin Karşılaştırması (Heatmap)
-    ax1 = plt.subplot(2, 3, 1)
-    metrics_df = df_results[['Model', 'Accuracy', 'Precision', 'Recall', 'F1_Score', 'ROC_AUC', 'PR_AUC']].set_index('Model')
-    sns.heatmap(metrics_df.T, annot=True, cmap='RdYlBu_r', center=0.5, fmt='.3f', ax=ax1)
-    ax1.set_title('🔥 Tüm Metriklerin Heatmap Karşılaştırması', fontweight='bold')
-    ax1.set_xlabel('')
-
-    # 2. F1 Score Karşılaştırması
-    ax2 = plt.subplot(2, 3, 2)
-    df_sorted = df_results.sort_values('F1_Score', ascending=True)
-    bars = ax2.barh(df_sorted['Model'], df_sorted['F1_Score'], color='skyblue', edgecolor='navy')
-    ax2.set_title('🎯 F1 Score Karşılaştırması', fontweight='bold')
-    ax2.set_xlabel('F1 Score')
-    # Değerleri çubukların üzerine yazma
-    for i, bar in enumerate(bars):
-        width = bar.get_width()
-        ax2.text(width + 0.01, bar.get_y() + bar.get_height()/2,
-                f'{width:.3f}', ha='left', va='center', fontsize=9)
-
-    # 3. Accuracy vs F1 Score Scatter
-    ax3 = plt.subplot(2, 3, 3)
-    scatter = ax3.scatter(df_results['Accuracy'], df_results['F1_Score'],
-                         s=100, c=df_results['ROC_AUC'], cmap='viridis', alpha=0.7)
-    ax3.set_xlabel('Accuracy')
-    ax3.set_ylabel('F1 Score')
-    ax3.set_title('📈 Accuracy vs F1 Score (ROC_AUC ile renklendirilmiş)', fontweight='bold')
-    plt.colorbar(scatter, ax=ax3, label='ROC_AUC')
-
-    # Model isimlerini noktalara ekleme
-    for i, model in enumerate(df_results['Model']):
-        ax3.annotate(model, (df_results['Accuracy'].iloc[i], df_results['F1_Score'].iloc[i]),
-                    xytext=(5, 5), textcoords='offset points', fontsize=8, alpha=0.7)
-
-    # 4. Precision vs Recall
-    ax4 = plt.subplot(2, 3, 4)
-    ax4.scatter(df_results['Recall'], df_results['Precision'], s=100, alpha=0.7, c='coral')
-    ax4.set_xlabel('Recall')
-    ax4.set_ylabel('Precision')
-    ax4.set_title('🎪 Precision vs Recall', fontweight='bold')
-    ax4.grid(True, alpha=0.3)
-
-    for i, model in enumerate(df_results['Model']):
-        ax4.annotate(model, (df_results['Recall'].iloc[i], df_results['Precision'].iloc[i]),
-                    xytext=(5, 5), textcoords='offset points', fontsize=8, alpha=0.7)
-
-    # 5. Radar Chart (En iyi 5 model)
-    ax5 = plt.subplot(2, 3, 5, projection='polar')
-
-    top_5_models = df_results.nlargest(5, 'F1_Score')
-    metrics = ['Accuracy', 'Precision', 'Recall', 'F1_Score', 'ROC_AUC']
-
-    angles = np.linspace(0, 2 * np.pi, len(metrics), endpoint=False).tolist()
-    angles += angles[:1]
-
-    colors = ['red', 'blue', 'green', 'orange', 'purple']
-
-    for i, (idx, row) in enumerate(top_5_models.iterrows()):
-        values = [row[metric] for metric in metrics]
-        values += values[:1]
-        ax5.plot(angles, values, 'o-', linewidth=2, label=row['Model'], color=colors[i])
-        ax5.fill(angles, values, alpha=0.25, color=colors[i])
-
-    ax5.set_xticks(angles[:-1])
-    ax5.set_xticklabels(metrics)
-    ax5.set_title('🕸 En İyi 5 Model Radar Grafiği', fontweight='bold', pad=20)
-    ax5.legend(loc='upper right', bbox_to_anchor=(1.3, 1.0))
-
-    # 6. Model Performans Özeti (Bar Chart)
-    ax6 = plt.subplot(2, 3, 6)
-    x = np.arange(len(df_results))
-    width = 0.15
-
-    metrics_to_plot = ['Accuracy', 'Precision', 'Recall', 'F1_Score']
-    colors = ['lightblue', 'lightgreen', 'lightcoral', 'lightyellow']
-
-    for i, metric in enumerate(metrics_to_plot):
-        ax6.bar(x + i*width, df_results[metric], width, label=metric, color=colors[i], alpha=0.8)
-
-    ax6.set_xlabel('Modeller')
-    ax6.set_ylabel('Score')
-    ax6.set_title('📊 Temel Metriklerin Karşılaştırması', fontweight='bold')
-    ax6.set_xticks(x + width * 1.5)
-    ax6.set_xticklabels(df_results['Model'], rotation=45, ha='right')
-    ax6.legend()
-    ax6.grid(True, alpha=0.3)
-
-    plt.tight_layout()
-    plt.show()
-
-    # Confusion Matrix Görselleştirmeleri (Ayrı bir figure)
-    n_models = len(confusion_matrices)
-    cols = 4
-    rows = (n_models + cols - 1) // cols
-
-    fig, axes = plt.subplots(rows, cols, figsize=(16, 4*rows))
-    fig.suptitle(f'{method_name} - Confusion Matrix Karşılaştırması', fontsize=14, fontweight='bold')
-
-    if n_models == 1:
-        axes = [axes]
-    elif rows == 1:
-        axes = axes.reshape(1, -1)
-
-    for i, (model_name, cm) in enumerate(confusion_matrices.items()):
-        row = i // cols
-        col = i % cols
-        ax = axes[row, col] if rows > 1 else axes[col]
-
-        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=ax)
-        ax.set_title(f'{model_name}', fontweight='bold')
-        ax.set_xlabel('Predicted')
-        ax.set_ylabel('Actual')
-
-    # Boş subplotları gizle
-    for i in range(n_models, rows * cols):
-        row = i // cols
-        col = i % cols
-        ax = axes[row, col] if rows > 1 else axes[col]
-        ax.axis('off')
-
-    plt.tight_layout()
-    plt.show()
-```
-
-```python
-def compare_all_methods(results_dict):
-    """Tüm yöntemleri karşılaştırma fonksiyonu"""
-
-    # Tüm sonuçları birleştir
-    all_results = []
-    for method, df in results_dict.items():
-        df_copy = df.copy()
-        df_copy['Method'] = method
-        all_results.append(df_copy)
-
-    combined_df = pd.concat(all_results, ignore_index=True)
-
-    print("\n" + "="*100)
-    print("🔥 TÜM YÖNTEMLERİN KAPSAMLI KARŞILAŞTIRMASI")
-    print("="*100)
-
-    # Her metrik için en iyi performansı gösteren yöntem ve model
-    metrics = ['Accuracy', 'Precision', 'Recall', 'F1_Score', 'ROC_AUC', 'PR_AUC']
-
-    print(f"\n🏆 EN İYİ PERFORMANSLAR:")
-    print("-"*80)
-    for metric in metrics:
-        best_row = combined_df.loc[combined_df[metric].idxmax()]
-        print(f"{metric:12}: {best_row['Method']:15} - {best_row['Model']:18} ({best_row[metric]:.4f})")
-
-    # Yöntem bazında ortalama performanslar
-    method_avg = combined_df.groupby('Method')[metrics].mean()
-    print(f"\n📊 YÖNTEM BAZINDA ORTALAMA PERFORMANSLAR:")
-    print("-"*80)
-    print(method_avg.round(4).to_string())
-
-    # Görselleştirme
-    fig, axes = plt.subplots(2, 3, figsize=(18, 12))
-    fig.suptitle('🚀 Tüm Yöntemlerin Detaylı Karşılaştırması', fontsize=16, fontweight='bold')
-
-    axes = axes.flatten()
-
-    for i, metric in enumerate(metrics):
-        pivot_df = combined_df.pivot_table(values=metric, index='Model', columns='Method', aggfunc='mean')
-
-        ax = axes[i]
-        sns.heatmap(pivot_df, annot=True, cmap='RdYlBu_r', fmt='.3f', ax=ax)
-        ax.set_title(f'{metric} Karşılaştırması', fontweight='bold')
-        ax.set_xlabel('Balancing Method')
-        ax.set_ylabel('Model')
-
-    plt.tight_layout()
-    plt.show()
-
-    # En iyi model-yöntem kombinasyonları
-    print(f"\n🎯 HER METRİK İÇİN EN İYİ MODEL-YÖNTEM KOMBINASYONLARI:")
-    print("-"*90)
-
-    for metric in metrics:
-        top_3 = combined_df.nlargest(3, metric)[['Method', 'Model', metric]]
-        print(f"\n{metric} Top 3:")
-        for idx, (_, row) in enumerate(top_3.iterrows(), 1):
-            print(f"  {idx}. {row['Method']:15} - {row['Model']:18} ({row[metric]:.4f})")
-
-    return combined_df
-```
-
-```python
-def run_comprehensive_evaluation(X_train, y_train, X_test, y_test,
-                                X_smote, y_smote, X_adasyn, y_adasyn,
-                                X_nearmiss, y_nearmiss):
-    """Tüm değerlendirmeyi çalıştır"""
-
-    results_dict = {}
-
-    # 1. Dengelenmemiş Veri
-    print("\n🔄 DENGELENMEMIŞ VERİ ANALİZİ BAŞLIYOR...")
-    results_imbalanced, cm_imbalanced = evaluate_models_comprehensive(
-        X_train, y_train, X_test, y_test, "Dengelenmemiş Veri"
-    )
-    create_comprehensive_visualizations(results_imbalanced, cm_imbalanced, "Dengelenmemiş Veri")
-    results_dict["Dengelenmemiş"] = results_imbalanced
-
-    # 2. SMOTE
-    print("\n🔄 SMOTE ANALİZİ BAŞLIYOR...")
-    results_smote, cm_smote = evaluate_models_comprehensive(
-        X_smote, y_smote, X_test, y_test, "SMOTE"
-    )
-    create_comprehensive_visualizations(results_smote, cm_smote, "SMOTE")
-    results_dict["SMOTE"] = results_smote
-
-    # 3. ADASYN
-    print("\n🔄 ADASYN ANALİZİ BAŞLIYOR...")
-    results_adasyn, cm_adasyn = evaluate_models_comprehensive(
-        X_adasyn, y_adasyn, X_test, y_test, "ADASYN"
-    )
-    create_comprehensive_visualizations(results_adasyn, cm_adasyn, "ADASYN")
-    results_dict["ADASYN"] = results_adasyn
-
-    # 4. NearMiss
-    print("\n🔄 NEARMISS ANALİZİ BAŞLIYOR...")
-    results_nearmiss, cm_nearmiss = evaluate_models_comprehensive(
-        X_nearmiss, y_nearmiss, X_test, y_test, "NearMiss"
-    )
-    create_comprehensive_visualizations(results_nearmiss, cm_nearmiss, "NearMiss")
-    results_dict["NearMiss"] = results_nearmiss
-
-    # 5. Tüm yöntemleri karşılaştır
-    print("\n🔄 GENEL KARŞILAŞTIRMA BAŞLIYOR...")
-    final_comparison = compare_all_methods(results_dict)
-
-    return results_dict, final_comparison
-```
-
-```python
-results_dict, final_comparison = run_comprehensive_evaluation(
-    X_train, y_train, X_test, y_test,
-    X_smote, y_smote, X_adasyn, y_adasyn,
-    X_nearmiss, y_nearmiss
-)
-```
+Projeyle ilgili sorularınız veya katkı talepleriniz için:  
+**Nazar Sıla Kazdal**
