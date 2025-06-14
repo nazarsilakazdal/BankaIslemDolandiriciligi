@@ -1,23 +1,23 @@
-# 🎯 Big Data ile Makine Öğrenmesi Analizi
+#  Big Data ile Makine Öğrenmesi Analizi
 
 Bu proje, büyük veri setleri üzerinde çeşitli makine öğrenmesi algoritmalarını kullanarak dolandırıcılık tespiti ve sınıflandırma üzerine odaklanır. Veri ön işleme, dengesiz veri sorunlarıyla başa çıkma ve model değerlendirme adımlarını içerir.
 
 ---
 
-## 📁 Proje İçeriği
+##  Proje İçeriği
 
 Notebook içerisinde aşağıdaki adımlar gerçekleştirilmiştir:
 
-### 1. 📦 Veri Yükleme ve İnceleme
+### 1.  Veri Yükleme ve İnceleme
 - Pandas kullanılarak veri yüklenmiş
 - Kayıp değerler, veri dağılımları ve dengesizlikler analiz edilmiştir
 
-### 2. 🧹 Veri Ön İşleme
+### 2.  Veri Ön İşleme
 - Kategorik değişkenlerin dönüştürülmesi
 - Özellik ölçekleme (StandardScaler)
 - Veri kümesindeki sınıf dengesizliğini gidermek için **NearMiss** yöntemi uygulanmıştır
 
-### 3. 📊 Modelleme
+### 3.  Modelleme
 Aşağıdaki makine öğrenmesi algoritmaları eğitilmiş ve test edilmiştir:
 
 - **Lojistik Regresyon**
@@ -28,7 +28,7 @@ Aşağıdaki makine öğrenmesi algoritmaları eğitilmiş ve test edilmiştir:
 - **AdaBoost Classifier**
 - **XGBoost Classifier**
 
-### 4. 📈 Model Performans Karşılaştırması
+### 4.  Model Performans Karşılaştırması
 
 Modeller şu metriklerle karşılaştırılmıştır:
 
@@ -44,7 +44,7 @@ Detaylı karşılaştırma tabloları görselleştirilmiştir.
 
 ---
 
-## 🛠️ Kullanılan Kütüphaneler
+##  Kullanılan Kütüphaneler
 
 - `pandas`, `numpy`
 - `matplotlib`, `seaborn`
@@ -54,7 +54,7 @@ Detaylı karşılaştırma tabloları görselleştirilmiştir.
 
 ---
 
-## 🚀 Nasıl Kullanılır?
+##  Nasıl Kullanılır?
 
 1. Gerekli paketleri yükleyin:
 ```bash
@@ -70,7 +70,7 @@ jupyter notebook bigData.ipynb
 
 ---
 
-## 📬 İletişim
+##  İletişim
 
 Projeyle ilgili sorularınız veya katkı talepleriniz için:  
 **Nazar Sıla Kazdal**
